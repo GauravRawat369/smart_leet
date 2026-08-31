@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 
 pub mod backoff;
+#[cfg(feature = "memory")]
+pub mod memory;
 pub mod outcome;
 pub mod store;
 pub mod task;
