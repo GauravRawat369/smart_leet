@@ -5,6 +5,8 @@ pub mod engine;
 #[cfg(feature = "memory")]
 pub mod memory;
 pub mod outcome;
+#[cfg(feature = "postgres")]
+pub mod postgres;
 pub mod store;
 pub mod task;
 pub mod workflow;
