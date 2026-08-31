@@ -1,7 +1,7 @@
 use scheduler::{Outcome, Task, Workflow, async_trait};
 use time::{Duration, OffsetDateTime};
 
-pub const HEARTBEAT: &str = "heartbeat";
+use crate::constants::DEFAULT_HEARTBEAT_INTERVAL_SECS;
 
 pub struct HeartbeatWorkflow;
 
@@ -11,7 +11,7 @@ impl HeartbeatWorkflow {
             .payload
             .get("interval_secs")
             .and_then(serde_json::Value::as_i64)
-            .unwrap_or(10);
+            .unwrap_or(DEFAULT_HEARTBEAT_INTERVAL_SECS);
         Duration::seconds(seconds)
     }
 }

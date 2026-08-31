@@ -3,48 +3,15 @@ use sqlx::Row;
 use sqlx::postgres::{PgPool, PgRow};
 use time::OffsetDateTime;
 
+use crate::constants::business_status;
+use crate::constants::postgres_sql::{
+    CLAIM_DUE, FIND_TASK, FINISH_TASK, INSERT_TASK, RECOVER_STALLED, RESCHEDULE_TASK,
+    SET_BUSINESS_STATUS,
+};
 use crate::store::SchedulerStore;
-use crate::task::{NewTask, Status, Task, UnknownStatus, business_status};
+use crate::task::{NewTask, Status, Task, UnknownStatus};
 
-pub const SCHEMA_SQL: &str = include_str!("../migrations/0001_create_scheduler_tasks.sql");
-
-const INSERT_TASK: &str = "
-INSERT INTO scheduler_tasks
-    (id, name, payload, schedule_time, retry_count, status, business_status, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
-RETURNING *";
-
-const CLAIM_DUE: &str = "
-UPDATE scheduler_tasks
-SET status = $1, locked_by = $2, locked_at = $3, updated_at = $3
-WHERE id IN (
-    SELECT id FROM scheduler_tasks
-    WHERE status IN ($4, $5) AND business_status = $6 AND schedule_time <= $3
-    ORDER BY schedule_time, id
-    LIMIT $7
-    FOR UPDATE SKIP LOCKED
-)
-RETURNING *";
-
-const RESCHEDULE_TASK: &str = "
-UPDATE scheduler_tasks
-SET status = $2, schedule_time = $3, retry_count = $4, locked_by = NULL, locked_at = NULL, updated_at = $5
-WHERE id = $1";
-
-const FINISH_TASK: &str = "
-UPDATE scheduler_tasks
-SET status = $2, business_status = $3, locked_by = NULL, locked_at = NULL, updated_at = $4
-WHERE id = $1";
-
-const RECOVER_STALLED: &str = "
-UPDATE scheduler_tasks
-SET status = $1, locked_by = NULL, locked_at = NULL, updated_at = $3
-WHERE status = $2 AND locked_at < $4";
-
-const FIND_TASK: &str = "SELECT * FROM scheduler_tasks WHERE id = $1";
-
-const SET_BUSINESS_STATUS: &str = "
-UPDATE scheduler_tasks SET business_status = $2, updated_at = $3 WHERE id = $1";
+pub use crate::constants::postgres_sql::SCHEMA as SCHEMA_SQL;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PgStoreError {

@@ -2,6 +2,7 @@ use time::Duration;
 use uuid::Uuid;
 
 use crate::backoff::BackoffConfig;
+use crate::constants::engine_defaults;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
@@ -17,10 +18,12 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             worker_id: generate_worker_id(),
-            poll_interval: Duration::seconds(1),
-            batch_size: 10,
-            stalled_after: Duration::minutes(5),
-            stalled_check_interval: Duration::minutes(1),
+            poll_interval: Duration::seconds(engine_defaults::POLL_INTERVAL_SECONDS),
+            batch_size: engine_defaults::BATCH_SIZE,
+            stalled_after: Duration::minutes(engine_defaults::STALLED_AFTER_MINUTES),
+            stalled_check_interval: Duration::minutes(
+                engine_defaults::STALLED_CHECK_INTERVAL_MINUTES,
+            ),
             backoff: BackoffConfig::default(),
         }
     }

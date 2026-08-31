@@ -1,5 +1,7 @@
 use time::{Duration, OffsetDateTime};
 
+use crate::constants::backoff_defaults;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RetryWindow {
     pub interval: Duration,
@@ -60,12 +62,11 @@ impl BackoffConfig {
 impl Default for BackoffConfig {
     fn default() -> Self {
         Self::new(
-            Duration::ZERO,
-            vec![
-                RetryWindow::seconds(60, 5),
-                RetryWindow::seconds(300, 5),
-                RetryWindow::seconds(1800, 5),
-            ],
+            Duration::seconds(backoff_defaults::START_AFTER_SECONDS),
+            backoff_defaults::WINDOWS
+                .iter()
+                .map(|(interval_seconds, count)| RetryWindow::seconds(*interval_seconds, *count))
+                .collect(),
         )
     }
 }

@@ -6,12 +6,7 @@ use serde_json::Value;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-pub mod business_status {
-    pub const PENDING: &str = "Pending";
-    pub const COMPLETED: &str = "COMPLETED";
-    pub const RETRIES_EXCEEDED: &str = "RETRIES_EXCEEDED";
-    pub const UNKNOWN_WORKFLOW: &str = "UNKNOWN_WORKFLOW";
-}
+use crate::constants::{business_status, status_label};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -25,10 +20,10 @@ pub enum Status {
 impl Status {
     pub const fn as_str(self) -> &'static str {
         match self {
-            Self::New => "new",
-            Self::Running => "running",
-            Self::Pending => "pending",
-            Self::Finish => "finish",
+            Self::New => status_label::NEW,
+            Self::Running => status_label::RUNNING,
+            Self::Pending => status_label::PENDING,
+            Self::Finish => status_label::FINISH,
         }
     }
 
@@ -56,10 +51,10 @@ impl FromStr for Status {
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
-            "new" => Ok(Self::New),
-            "running" => Ok(Self::Running),
-            "pending" => Ok(Self::Pending),
-            "finish" => Ok(Self::Finish),
+            status_label::NEW => Ok(Self::New),
+            status_label::RUNNING => Ok(Self::Running),
+            status_label::PENDING => Ok(Self::Pending),
+            status_label::FINISH => Ok(Self::Finish),
             other => Err(UnknownStatus(other.to_owned())),
         }
     }
