@@ -3,8 +3,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration as StdDuration;
 
-use scheduler::memory::MemoryStore;
-use scheduler::{Config, Dispatcher, Engine, Metrics, Outcome, Task, Workflow, async_trait};
+use scheduler::{
+    Config, Dispatcher, Engine, Metrics, Outcome, SchedulerStore, Task, Workflow, async_trait,
+};
 use tokio::sync::Mutex;
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
@@ -109,7 +110,11 @@ pub struct RunningEngine {
 }
 
 impl RunningEngine {
-    pub fn start<D: Dispatcher>(store: MemoryStore, dispatcher: D, config: Config) -> Self {
+    pub fn start<S: SchedulerStore, D: Dispatcher>(
+        store: S,
+        dispatcher: D,
+        config: Config,
+    ) -> Self {
         let (shutdown, shutdown_signal) = oneshot::channel();
         let engine = Engine::new(store, dispatcher, config);
         let handle = tokio::spawn(async move {
