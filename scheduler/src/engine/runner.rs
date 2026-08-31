@@ -6,12 +6,13 @@ use tokio::task::{JoinError, JoinSet};
 use tokio::time::{MissedTickBehavior, interval};
 use tracing::Instrument;
 
+use crate::constants::{business_status, engine_defaults};
 use crate::engine::config::Config;
 use crate::engine::metrics::Metrics;
 use crate::engine::transition::apply_outcome;
 use crate::outcome::Outcome;
 use crate::store::SchedulerStore;
-use crate::task::{Task, business_status};
+use crate::task::Task;
 use crate::workflow::Dispatcher;
 
 pub struct Engine<S, D> {
@@ -166,7 +167,9 @@ fn log_join_result(joined: Result<(), JoinError>) {
 }
 
 fn build_ticker(period: std::time::Duration) -> tokio::time::Interval {
-    let mut ticker = interval(period.max(std::time::Duration::from_millis(1)));
+    let mut ticker = interval(period.max(std::time::Duration::from_millis(
+        engine_defaults::MIN_TICK_INTERVAL_MILLIS,
+    )));
     ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
     ticker
 }

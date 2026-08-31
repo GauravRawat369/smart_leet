@@ -1,0 +1,9 @@
+pub const HEARTBEAT_TASK_NAME: &str = "heartbeat";
+pub const HEARTBEAT_NAME: &str = "example";
+pub const DEFAULT_DATABASE_URL: &str = "postgres://scheduler:scheduler@localhost:55432/scheduler";
+pub const DEFAULT_HEARTBEAT_INTERVAL_SECS: i64 = 10;
+pub const DATABASE_URL_ENV: &str = "DATABASE_URL";
+pub const HEARTBEAT_INTERVAL_ENV: &str = "HEARTBEAT_INTERVAL_SECS";
+pub const DEFAULT_LOG_FILTER: &str = "info";
+pub const POLL_INTERVAL_SECONDS: i64 = 1;
+pub const STALLED_AFTER_MINUTES: i64 = 2;

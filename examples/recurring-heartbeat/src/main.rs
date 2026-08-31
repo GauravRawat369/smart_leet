@@ -1,3 +1,4 @@
+mod constants;
 mod dispatcher;
 mod workflows;
 
@@ -7,24 +8,29 @@ use serde_json::json;
 use time::{Duration, OffsetDateTime};
 use tracing_subscriber::EnvFilter;
 
+use crate::constants::{
+    DATABASE_URL_ENV, DEFAULT_DATABASE_URL, DEFAULT_HEARTBEAT_INTERVAL_SECS, DEFAULT_LOG_FILTER,
+    HEARTBEAT_INTERVAL_ENV, HEARTBEAT_NAME, HEARTBEAT_TASK_NAME, POLL_INTERVAL_SECONDS,
+    STALLED_AFTER_MINUTES,
+};
 use crate::dispatcher::ExampleDispatcher;
-use crate::workflows::HEARTBEAT;
 
 fn read_database_url() -> String {
-    std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgres://scheduler:scheduler@localhost:55432/scheduler".to_owned())
+    std::env::var(DATABASE_URL_ENV).unwrap_or_else(|_| DEFAULT_DATABASE_URL.to_owned())
 }
 
 fn read_heartbeat_interval_secs() -> i64 {
-    std::env::var("HEARTBEAT_INTERVAL_SECS")
+    std::env::var(HEARTBEAT_INTERVAL_ENV)
         .ok()
         .and_then(|value| value.parse().ok())
-        .unwrap_or(10)
+        .unwrap_or(DEFAULT_HEARTBEAT_INTERVAL_SECS)
 }
 
 fn init_tracing() {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| DEFAULT_LOG_FILTER.into()),
+        )
         .init();
 }
 
@@ -34,8 +40,8 @@ async fn schedule_heartbeat_once(
     interval_secs: i64,
 ) -> Result<(), PgStoreError> {
     let task = NewTask {
-        id: deterministic_task_id(HEARTBEAT, name),
-        name: HEARTBEAT.to_owned(),
+        id: deterministic_task_id(HEARTBEAT_TASK_NAME, name),
+        name: HEARTBEAT_TASK_NAME.to_owned(),
         payload: json!({ "name": name, "interval_secs": interval_secs }),
         schedule_time: OffsetDateTime::now_utc(),
     };
@@ -54,11 +60,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_tracing();
     let store = PgStore::connect(&read_database_url()).await?;
     store.ensure_schema().await?;
-    schedule_heartbeat_once(&store, "example", read_heartbeat_interval_secs()).await?;
+    schedule_heartbeat_once(&store, HEARTBEAT_NAME, read_heartbeat_interval_secs()).await?;
 
     let config = Config::default()
-        .with_poll_interval(Duration::seconds(1))
-        .with_stalled_after(Duration::minutes(2));
+        .with_poll_interval(Duration::seconds(POLL_INTERVAL_SECONDS))
+        .with_stalled_after(Duration::minutes(STALLED_AFTER_MINUTES));
     let metrics = scheduler::run(store, ExampleDispatcher, config).await;
     tracing::info!(?metrics, "engine stopped");
     Ok(())
